@@ -208,16 +208,20 @@
           <div class="flex items-start gap-3">
             <span class="text-amber-700 text-lg mt-0.5">✉️</span>
             <div>
-              <h3 class="text-sm font-bold text-slate-800">Owner အီးမေးလ်ဖြင့် အတည်ပြုဝင်ရောက်ပါ</h3>
+              <h3 class="text-sm font-bold text-slate-800">Owner အီးမေးလ်နှင့် Password ဖြင့် အတည်ပြုဝင်ရောက်ပါ</h3>
               <p class="text-xs text-slate-600 mt-0.5">
-                မှားယွင်း/နမူနာ စာရင်းများဖျက်ရန်နှင့် ဘောင်ချာနံပါတ်စဉ် (၁) သို့ Auto ပြန်ချရန် Owner အီးမေးလ်ကို ရိုက်ထည့်ပါ။ (ဝန်ထမ်းများ ဝင်ရောက်ခွင့်မရှိပါ)
+                စာရင်းပေါင်းကြည့်ရန်၊ Excel ထုတ်ရန်နှင့် စာရင်းဖျက်/ပြင်ရန် Owner အီးမေးလ်နှင့် လျှို့ဝှက်နံပါတ် (Password) ကို ရိုက်ထည့်ပါ။ (ဝန်ထမ်းများ ဝင်ရောက်ခွင့်မရှိပါ)
               </p>
             </div>
           </div>
-          <div class="flex flex-col sm:flex-row gap-2 pt-1">
-            <input id="ownerEmailInput" type="email" placeholder="Owner အီးမေးလ် ရိုက်ထည့်ပါ (ဥပမာ - lakabarnotary.mm@gmail.com)" onkeydown="if(event.key==='Enter'){verifyOwnerEmail();}" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
-            <button type="button" onclick="verifyOwnerEmail()" class="px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm shadow-sm transition shrink-0">
-              🔓 Owner အတည်ပြုမည်
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 pt-1">
+            <input id="ownerEmailInput" type="email" placeholder="Owner အီးမေးလ် (lakabarnotary.mm@gmail.com)" onkeydown="if(event.key==='Enter'){verifyOwnerEmail();}" class="sm:col-span-5 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <div class="sm:col-span-4 relative flex items-center">
+              <input id="ownerPasswordInput" type="password" placeholder="Owner Password" onkeydown="if(event.key==='Enter'){verifyOwnerEmail();}" class="w-full rounded-lg border border-slate-300 px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+              <button type="button" onclick="toggleOwnerPasswordVisibility()" title="Password ပြ/ဖျောက်" class="absolute right-2 text-slate-500 hover:text-slate-800 text-xs px-1">👁️</button>
+            </div>
+            <button type="button" onclick="verifyOwnerEmail()" class="sm:col-span-3 px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+              🔓 ဝင်ရောက်မည်
             </button>
           </div>
           <p id="ownerAuthError" class="hidden text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg"></p>
@@ -243,6 +247,47 @@
               လက်ရှိစာရင်း: <span id="ownerTotalVouchersCount">0</span> ခု | နောက်ထပ်နံပါတ်: <span id="ownerNextVoucherBadge" class="text-rose-700">LKB-2026-0001</span>
             </span>
           </div>
+        </div>
+
+        <!-- Owner Summary KPI Cards (Filtered / Total) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+            <div class="text-[11px] font-semibold text-slate-500">ဘောင်ချာအရေအတွက်</div>
+            <div id="ownerSumCount" class="text-base sm:text-lg font-bold text-slate-900 mt-0.5">0 စောင်</div>
+          </div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="text-[11px] font-semibold text-amber-900">စုစုပေါင်း ကျသင့်ငွေ</div>
+            <div id="ownerSumTotal" class="text-base sm:text-lg font-bold text-amber-950 mt-0.5">0 ကျပ်</div>
+          </div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <div class="text-[11px] font-semibold text-emerald-800">ရရှိပြီးငွေ (Paid)</div>
+            <div id="ownerSumPaid" class="text-base sm:text-lg font-bold text-emerald-900 mt-0.5">0 ကျပ်</div>
+          </div>
+          <div class="bg-rose-50 border border-rose-200 rounded-xl p-3">
+            <div class="text-[11px] font-semibold text-rose-700">ရရန်ကျန်ငွေ (Balance)</div>
+            <div id="ownerSumBalance" class="text-base sm:text-lg font-bold text-rose-800 mt-0.5">0 ကျပ်</div>
+          </div>
+        </div>
+
+        <!-- Owner Date Filter & Excel/CSV Export Bar -->
+        <div class="flex flex-wrap items-end justify-between gap-3 bg-slate-50 border border-slate-200 p-3 rounded-xl">
+          <div class="flex flex-wrap items-end gap-2.5">
+            <div>
+              <label for="ownerFilterFromDate" class="block text-[11px] font-semibold text-slate-600 mb-1">ရက်စွဲ (မှ)</label>
+              <input id="ownerFilterFromDate" type="date" onchange="renderOwnerVouchersTable()" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <div>
+              <label for="ownerFilterToDate" class="block text-[11px] font-semibold text-slate-600 mb-1">ရက်စွဲ (ထိ)</label>
+              <input id="ownerFilterToDate" type="date" onchange="renderOwnerVouchersTable()" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            </div>
+            <button type="button" onclick="resetOwnerFilters()" class="text-xs bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg font-medium transition">
+              အားလုံးပြန်ကြည့်ရန်
+            </button>
+          </div>
+          <button type="button" onclick="exportOwnerVouchersCsv()" class="text-xs bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-1.5">
+            <span>📥</span>
+            <span>Excel (CSV) စာရင်းပေါင်း ထုတ်မည်</span>
+          </button>
         </div>
 
         <!-- Owner Action Toolbar -->
@@ -300,6 +345,9 @@
               <tbody id="ownerVouchersTableBody" class="divide-y divide-slate-200 bg-white">
                 <!-- Populated dynamically -->
               </tbody>
+              <tfoot id="ownerTableFooterTotals" class="bg-amber-50/90 border-t-2 border-amber-300 font-bold text-slate-900">
+                <!-- Populated dynamically -->
+              </tfoot>
             </table>
           </div>
         </div>
@@ -654,6 +702,7 @@
       seq: 1,
       isOwner: false,
       ownerEmail: '',
+      ownerPassword: '',
       pendingDeleteRow: null,
       offlineQueue: [],
       isSyncingOffline: false,
@@ -808,9 +857,12 @@
         if (savedStaffName !== null && document.getElementById('staffNameSelect')) {
           document.getElementById('staffNameSelect').value = savedStaffName;
         }
-        const savedOwner = localStorage.getItem(STORAGE_KEY_OWNER_EMAIL);
-        if (savedOwner && ALLOWED_OWNER_EMAILS.includes(savedOwner.toLowerCase())) {
+        localStorage.removeItem(STORAGE_KEY_OWNER_EMAIL);
+        const savedOwner = sessionStorage.getItem(STORAGE_KEY_OWNER_EMAIL);
+        const savedPwd = sessionStorage.getItem('lakabar_owner_pwd_v4');
+        if (savedOwner && savedPwd && ALLOWED_OWNER_EMAILS.includes(savedOwner.toLowerCase())) {
           state.ownerEmail = savedOwner.toLowerCase();
+          state.ownerPassword = savedPwd;
           state.isOwner = true;
         }
         const savedQueue = localStorage.getItem(STORAGE_KEY_OFFLINE_QUEUE);
@@ -967,7 +1019,8 @@
           })
           .syncOfflineVouchersBatch(batchToSync, state.ownerEmail || '');
       } else {
-        callGasPost({ action: 'syncOfflineBatch', offlineList: batchToSync, ownerEmail: state.ownerEmail || '' })
+        callGasPost({ action: 'syncOfflineBatch', offlineList: batchToSync, ownerEmail: state.ownerEmail || '',
+        ownerPassword: state.ownerPassword || '', ownerPassword: state.ownerPassword || '' })
           .then((res) => {
             state.isSyncingOffline = false;
             if (res && res.ok) {
@@ -1035,10 +1088,10 @@
               showToast(`ချိတ်ဆက်မှု အခက်အခဲရှိပါသည် (${err.message})`, true);
             }
           })
-          .getNextVoucherInfo(state.ownerEmail || '');
+          .getNextVoucherInfo(state.ownerEmail || '', state.ownerPassword || '');
       } else {
         const reqPromise = (state.isOwner && state.ownerEmail)
-          ? callGasPost({ action: 'resequenceVouchers', ownerEmail: state.ownerEmail })
+          ? callGasPost({ action: 'resequenceVouchers', ownerEmail: state.ownerEmail, ownerPassword: state.ownerPassword || '' })
           : callGasGetNextVoucher();
         reqPromise
           .then((res) => {
@@ -1109,13 +1162,21 @@
       }
     }
 
+    function toggleOwnerPasswordVisibility() {
+      const pwdEl = document.getElementById('ownerPasswordInput');
+      if (!pwdEl) return;
+      pwdEl.type = pwdEl.type === 'password' ? 'text' : 'password';
+    }
+
     function verifyOwnerEmail() {
       const inputEl = document.getElementById('ownerEmailInput');
+      const pwdEl = document.getElementById('ownerPasswordInput');
       const errEl = document.getElementById('ownerAuthError');
-      const email = (inputEl.value || '').trim().toLowerCase();
+      const email = (inputEl ? inputEl.value : '').trim().toLowerCase();
+      const password = pwdEl ? pwdEl.value : '';
 
-      if (!email) {
-        errEl.textContent = 'ကျေးဇူးပြု၍ Owner အီးမေးလ်ကို ရိုက်ထည့်ပါ။';
+      if (!email || !password) {
+        errEl.textContent = 'ကျေးဇူးပြု၍ Owner အီးမေးလ်နှင့် Password နှစ်ခုလုံးကို ရိုက်ထည့်ပါ။';
         errEl.classList.remove('hidden');
         return;
       }
@@ -1127,44 +1188,47 @@
               errEl.classList.add('hidden');
               state.isOwner = true;
               state.ownerEmail = res.ownerEmail || email;
-              try { localStorage.setItem(STORAGE_KEY_OWNER_EMAIL, state.ownerEmail); } catch (e) {}
+              state.ownerPassword = password;
+              try {
+                sessionStorage.setItem(STORAGE_KEY_OWNER_EMAIL, state.ownerEmail);
+                sessionStorage.setItem('lakabar_owner_pwd_v4', password);
+              } catch (e) {}
               applyServerVoucherInfo(res, false);
               showToast(`Owner (${state.ownerEmail}) အဖြစ် အတည်ပြုပြီးပါပြီ။`, false);
             } else {
-              errEl.textContent = (res && res.error) || 'ခွင့်ပြုထားသော Owner အီးမေးလ် မဟုတ်ပါ။ ဝန်ထမ်းများ ဝင်ရောက်ခွင့်မရှိပါ။';
+              errEl.textContent = (res && res.error) || 'Owner အီးမေးလ် သို့မဟုတ် Password မှားယွင်းနေပါသည်။';
               errEl.classList.remove('hidden');
-              showToast('Owner အီးမေးလ် မမှန်ကန်ပါ။', true);
+              showToast('Owner အီးမေးလ် သို့မဟုတ် Password မှားယွင်းနေပါသည်။', true);
             }
           })
           .withFailureHandler((err) => {
             errEl.textContent = `အတည်ပြုရာတွင် အခက်အခဲရှိပါသည် (${err.message})`;
             errEl.classList.remove('hidden');
           })
-          .verifyOwnerEmailAccess(email);
+          .verifyOwnerEmailAccess(email, password);
       } else {
-        if (!ALLOWED_OWNER_EMAILS.includes(email)) {
-          errEl.textContent = 'ခွင့်ပြုထားသော Owner အီးမေးလ် မဟုတ်ပါ (lakabarnotary.mm@gmail.com သို့မဟုတ် kanni8374@gmail.com ဖြင့် ဝင်ရောက်ပါ)။ ဝန်ထမ်းများ စာရင်းဖျက်ခွင့် မရှိပါ။';
-          errEl.classList.remove('hidden');
-          showToast('ခွင့်ပြုထားသော Owner အီးမေးလ် မဟုတ်ပါ။', true);
-          return;
-        }
-        errEl.classList.add('hidden');
-        state.isOwner = true;
-        state.ownerEmail = email;
-        try { localStorage.setItem(STORAGE_KEY_OWNER_EMAIL, state.ownerEmail); } catch (e) {}
-        updateOwnerRoleUI();
-        callGasPost({ action: 'resequenceVouchers', ownerEmail: email })
+        callGasPost({ action: 'verifyOwner', ownerEmail: email, ownerPassword: password })
           .then((res) => {
-            if (res && res.ok) {
+            if (res && res.ok && res.isOwner) {
+              errEl.classList.add('hidden');
+              state.isOwner = true;
+              state.ownerEmail = res.ownerEmail || email;
+              state.ownerPassword = password;
+              try {
+                sessionStorage.setItem(STORAGE_KEY_OWNER_EMAIL, state.ownerEmail);
+                sessionStorage.setItem('lakabar_owner_pwd_v4', password);
+              } catch (e) {}
               applyServerVoucherInfo(res, false);
+              showToast(`Owner (${state.ownerEmail}) အဖြစ် အတည်ပြုပြီးပါပြီ။`, false);
             } else {
-              renderOwnerVouchersTable();
+              errEl.textContent = (res && res.error) || 'Owner အီးမေးလ် သို့မဟုတ် Password မှားယွင်းနေပါသည်။';
+              errEl.classList.remove('hidden');
+              showToast('Owner အီးမေးလ် သို့မဟုတ် Password မှားယွင်းနေပါသည်။', true);
             }
-            showToast(`Owner (${state.ownerEmail}) အဖြစ် အတည်ပြုပြီးပါပြီ။`, false);
           })
-          .catch(() => {
-            renderOwnerVouchersTable();
-            showToast(`Owner (${state.ownerEmail}) အဖြစ် အတည်ပြုပြီးပါပြီ။`, false);
+          .catch((err) => {
+            errEl.textContent = `Google Apps Script နှင့် ချိတ်ဆက်၍မရပါ (${err.message})။ Code.gs ကို Update လုပ်ပြီး Re-deploy လုပ်ထားကြောင်း စစ်ဆေးပါ။`;
+            errEl.classList.remove('hidden');
           });
       }
     }
@@ -1172,23 +1236,137 @@
     function logoutOwnerMode() {
       state.isOwner = false;
       state.ownerEmail = '';
+      state.ownerPassword = '';
       state.pendingDeleteRow = null;
-      try { localStorage.removeItem(STORAGE_KEY_OWNER_EMAIL); } catch (e) {}
+      try {
+        localStorage.removeItem(STORAGE_KEY_OWNER_EMAIL);
+        sessionStorage.removeItem(STORAGE_KEY_OWNER_EMAIL);
+        sessionStorage.removeItem('lakabar_owner_pwd_v4');
+      } catch (e) {}
       document.getElementById('ownerEmailInput').value = '';
+      const pwdEl = document.getElementById('ownerPasswordInput');
+      if (pwdEl) pwdEl.value = '';
       showClearAllConfirm(false);
       updateOwnerRoleUI();
       showToast('Owner စနစ်မှ ထွက်ပြီး ဝန်ထမ်းမုဒ် (Staff Lock) သို့ ပြောင်းလဲလိုက်ပါပြီ။', false);
     }
 
+    function getFilteredOwnerVouchers() {
+      const list = state.vouchers || [];
+      const fromEl = document.getElementById('ownerFilterFromDate');
+      const toEl = document.getElementById('ownerFilterToDate');
+      const fromDate = fromEl ? fromEl.value : '';
+      const toDate = toEl ? toEl.value : '';
+      return list.filter((v) => {
+        const d = String(v.date || '').substring(0, 10);
+        if (fromDate && d && d < fromDate) return false;
+        if (toDate && d && d > toDate) return false;
+        return true;
+      });
+    }
+
+    function resetOwnerFilters() {
+      const fromEl = document.getElementById('ownerFilterFromDate');
+      const toEl = document.getElementById('ownerFilterToDate');
+      if (fromEl) fromEl.value = '';
+      if (toEl) toEl.value = '';
+      renderOwnerVouchersTable();
+    }
+
+    function exportOwnerVouchersCsv() {
+      if (!state.isOwner) {
+        showToast('Owner အီးမေးလ်ဖြင့်သာ စာရင်းထုတ်ယူခွင့်ရှိပါသည်။', true);
+        return;
+      }
+      const list = getFilteredOwnerVouchers();
+      if (list.length === 0) {
+        showToast('ထုတ်ယူရန် ဘောင်ချာစာရင်း မရှိပါ။', true);
+        return;
+      }
+      const escapeCsv = (val) => {
+        const s = String(val == null ? '' : val).replace(/"/g, '""');
+        return `"${s}"`;
+      };
+      const headers = [
+        'စဉ်', 'ဘောင်ချာနံပါတ်', 'ရက်စွဲ', 'အပ်နှံသူအမည်', 'ဖုန်းနံပါတ်',
+        'ဝန်ဆောင်မှု', 'ငွေပေးချေမှုပုံစံ', 'အခြေအနေ',
+        'စုစုပေါင်းကျသင့်ငွေ (Ks)', 'ရရှိပြီးငွေ (Ks)', 'ရရန်ကျန်ငွေ (Ks)',
+        'မှတ်ချက်', 'တာဝန်ခံ'
+      ];
+      let sumTotal = 0;
+      let sumPaid = 0;
+      let sumBalance = 0;
+      const rows = list.map((v, idx) => {
+        const t = Number(v.totalAmount || 0);
+        const p = Number(v.paidAmount || 0);
+        const b = Number(v.balanceAmount || 0);
+        sumTotal += t;
+        sumPaid += p;
+        sumBalance += b;
+        return [
+          idx + 1,
+          v.voucherNo || '',
+          v.date || '',
+          v.customerName || '',
+          v.customerPhone || '',
+          v.servicesSummary || '',
+          v.paymentMethod || '',
+          v.paymentStatusLabel || '',
+          t,
+          p,
+          b,
+          v.remarks || '',
+          v.staffName || ''
+        ].map(escapeCsv).join(',');
+      });
+      const totalRow = [
+        '', 'စုစုပေါင်း (TOTAL)', '', `${list.length} စောင်`, '',
+        '', '', '',
+        sumTotal, sumPaid, sumBalance, '', ''
+      ].map(escapeCsv).join(',');
+
+      const csvContent = '\uFEFF' + [headers.map(escapeCsv).join(','), ...rows, totalRow].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lakabar_vouchers_${getTodayISO()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast(`ဘောင်ချာ (${list.length}) စောင်၏ စာရင်းပေါင်း Excel (CSV) ဖိုင်ကို ဒေါင်းလုဒ်ထုတ်ပြီးပါပြီ။`, false);
+    }
+
     function renderOwnerVouchersTable() {
       const tbody = document.getElementById('ownerVouchersTableBody');
+      const tfoot = document.getElementById('ownerTableFooterTotals');
       const countEl = document.getElementById('ownerTotalVouchersCount');
       const nextBadge = document.getElementById('ownerNextVoucherBadge');
+      const sumCountEl = document.getElementById('ownerSumCount');
+      const sumTotalEl = document.getElementById('ownerSumTotal');
+      const sumPaidEl = document.getElementById('ownerSumPaid');
+      const sumBalanceEl = document.getElementById('ownerSumBalance');
       if (!tbody) return;
 
-      const list = state.vouchers || [];
-      if (countEl) countEl.textContent = String(list.length);
+      const allList = state.vouchers || [];
+      const list = getFilteredOwnerVouchers();
+      if (countEl) countEl.textContent = String(allList.length);
       if (nextBadge) nextBadge.textContent = formatVoucherNo(state.seq);
+
+      let sumTotal = 0;
+      let sumPaid = 0;
+      let sumBalance = 0;
+      list.forEach((v) => {
+        sumTotal += Number(v.totalAmount || 0);
+        sumPaid += Number(v.paidAmount || 0);
+        sumBalance += Number(v.balanceAmount || 0);
+      });
+
+      if (sumCountEl) sumCountEl.textContent = `${list.length} စောင်`;
+      if (sumTotalEl) sumTotalEl.textContent = `${formatKs(sumTotal)} ကျပ်`;
+      if (sumPaidEl) sumPaidEl.textContent = `${formatKs(sumPaid)} ကျပ်`;
+      if (sumBalanceEl) sumBalanceEl.textContent = `${formatKs(sumBalance)} ကျပ်`;
 
       if (list.length === 0) {
         tbody.innerHTML = `
@@ -1198,6 +1376,7 @@
             </td>
           </tr>
         `;
+        if (tfoot) tfoot.innerHTML = '';
         return;
       }
 
@@ -1227,6 +1406,16 @@
           </tr>
         `;
       }).join('');
+
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-2.5 px-3 text-right text-amber-950">စုစုပေါင်း (${list.length} စောင်) — ရရှိငွေ: ${formatKs(sumPaid)} ကျပ် | ကျန်ငွေ: ${formatKs(sumBalance)} ကျပ်</td>
+            <td class="py-2.5 px-3 text-right text-amber-950">${formatKs(sumTotal)} ကျပ်</td>
+            <td colspan="2" class="py-2.5 px-3"></td>
+          </tr>
+        `;
+      }
     }
 
     function askDeleteSingleVoucher(rowNumber) {
@@ -1258,9 +1447,9 @@
           .withFailureHandler((err) => {
             showToast(`ဖျက်ရာတွင် အခက်အခဲရှိပါသည် (${err.message})`, true);
           })
-          .deleteVoucherByOwner(rowNumber, state.ownerEmail);
+          .deleteVoucherByOwner(rowNumber, state.ownerEmail, state.ownerPassword || '');
       } else {
-        callGasPost({ action: 'deleteVoucher', rowNumber: rowNumber, ownerEmail: state.ownerEmail })
+        callGasPost({ action: 'deleteVoucher', rowNumber: rowNumber, ownerEmail: state.ownerEmail, ownerPassword: state.ownerPassword || '' })
           .then((res) => {
             if (res && res.ok) {
               applyServerVoucherInfo(res, false);
@@ -1302,9 +1491,9 @@
           .withFailureHandler((err) => {
             showToast(`ရှင်းလင်းရာတွင် အခက်အခဲရှိပါသည် (${err.message})`, true);
           })
-          .clearAllVouchersByOwner(state.ownerEmail);
+          .clearAllVouchersByOwner(state.ownerEmail, state.ownerPassword || '');
       } else {
-        callGasPost({ action: 'clearAllVouchers', ownerEmail: state.ownerEmail })
+        callGasPost({ action: 'clearAllVouchers', ownerEmail: state.ownerEmail, ownerPassword: state.ownerPassword || '' })
           .then((res) => {
             if (res && res.ok) {
               applyServerVoucherInfo(res, false);
@@ -1335,9 +1524,9 @@
           .withFailureHandler((err) => {
             showToast(`အခက်အခဲရှိပါသည် (${err.message})`, true);
           })
-          .resequenceVouchersByOwner(state.ownerEmail);
+          .resequenceVouchersByOwner(state.ownerEmail, state.ownerPassword || '');
       } else {
-        callGasPost({ action: 'resequenceVouchers', ownerEmail: state.ownerEmail })
+        callGasPost({ action: 'resequenceVouchers', ownerEmail: state.ownerEmail, ownerPassword: state.ownerPassword || '' })
           .then((res) => {
             if (res && res.ok) {
               applyServerVoucherInfo(res, false);
@@ -1710,7 +1899,8 @@
         balanceAmount: balance,
         remarks: finalRemarks,
         staffName: getActiveStaffName() || '-',
-        ownerEmail: state.ownerEmail || ''
+        ownerEmail: state.ownerEmail || '',
+        ownerPassword: state.ownerPassword || ''
       };
     }
 
