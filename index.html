@@ -121,6 +121,18 @@
       #entryFormScreen {
         display: none !important;
       }
+      body.print-blocked #voucherPreviewScreen {
+        display: none !important;
+      }
+      body.print-blocked::after {
+        content: "⚠️ အချက်အလက် အပြည့်အစုံဖြည့်သွင်းပြီး 'A5 ဘောင်ချာ ပရင့်ထုတ်မည်' ခလုတ်မှတစ်ဆင့်သာ ပရင့်ထုတ်နိုင်ပါသည်။";
+        display: block !important;
+        padding: 20mm;
+        font-size: 16pt;
+        font-weight: bold;
+        color: #991b1b;
+        text-align: center;
+      }
       #voucherPreviewScreen {
         display: block !important;
         margin: 0 !important;
@@ -461,7 +473,7 @@
 
           <div>
             <label for="staffNameSelect" class="block text-xs font-bold text-amber-950 mb-1">
-              တာဝန်ခံအမည် (ရိုက်ထည့်ရန်)
+              တာဝန်ခံအမည် <span class="text-rose-600">*</span>
             </label>
             <input id="staffNameSelect" type="text" placeholder="တာဝန်ခံအမည် ရိုက်ထည့်ပါ..." oninput="handleFormChange()" class="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
@@ -525,13 +537,13 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label for="customerNameInput" class="block text-xs font-bold text-slate-700 mb-1">
-              အပ်နှံသူအမည်
+              အပ်နှံသူအမည် <span class="text-rose-600">*</span>
             </label>
             <input id="customerNameInput" type="text" placeholder="ဥပမာ - ဦးအေးချမ်းမောင် / ဒေါ်ရွှေသမီး" oninput="handleFormChange()" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
           <div>
             <label for="customerPhoneInput" class="block text-xs font-bold text-slate-700 mb-1">
-              ဖုန်းနံပါတ်
+              ဖုန်းနံပါတ် <span class="text-rose-600">*</span>
             </label>
             <input id="customerPhoneInput" type="text" placeholder="ဥပမာ - 09-79xxxxxxx" oninput="handleFormChange()" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
@@ -631,9 +643,14 @@
             <span class="text-[11px] text-amber-900 font-bold">🔒 ပရင့်ထုတ်သည်နှင့် Google Sheet သို့ အလိုအလျောက် တန်းသိမ်းပါမည်</span>
           </div>
 
-          <button id="btnPrintAndAutoSave" type="button" onclick="saveAndPrintVoucher()" class="w-full py-4 px-5 rounded-xl bg-gradient-to-r from-amber-700 via-amber-800 to-yellow-800 hover:from-amber-800 hover:to-yellow-900 text-white font-bold text-base shadow-lg transition flex items-center justify-center gap-2.5">
-            <span>🖨️</span>
-            <span id="btnPrintAndAutoSaveText">A5 ဘောင်ချာ ပရင့်ထုတ်မည် (Print &amp; Auto-Save)</span>
+          <div id="formValidationBanner" class="bg-rose-50 border border-rose-200 text-rose-800 px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-start gap-2">
+            <span class="shrink-0 mt-0.5">🔒</span>
+            <span id="formValidationText">ပရင့်ထုတ်ရန် လိုအပ်သည့် အချက်အလက်များကို ပြည့်စုံစွာ ဖြည့်သွင်းပေးပါ။</span>
+          </div>
+
+          <button id="btnPrintAndAutoSave" type="button" onclick="saveAndPrintVoucher()" aria-disabled="true" class="w-full py-4 px-5 rounded-xl bg-slate-300 text-slate-600 cursor-not-allowed font-bold text-base shadow-sm transition flex items-center justify-center gap-2.5">
+            <span id="btnPrintIcon">🔒</span>
+            <span id="btnPrintAndAutoSaveText">အချက်အလက်ပြည့်စုံမှ ပရင့်ထုတ်နိုင်ပါမည်</span>
           </button>
         </div>
       </div>
@@ -2356,6 +2373,115 @@
       }
       document.getElementById('pvRemarks').textContent = displayRemarks || '-';
       document.getElementById('pvStaffSign').textContent = getActiveStaffName();
+
+      updatePrintButtonState();
+    }
+
+    // =========================================================================
+    // STRICT VALIDATION GUARD (အချက်အလက် မပြည့်စုံဘဲ ပရင့်ထုတ်၍ မရစေရန်)
+    // =========================================================================
+    function getMissingRequiredFields() {
+      const missing = [];
+      const staffEl = document.getElementById('staffNameSelect');
+      const dateEl = document.getElementById('voucherDateInput');
+      const custNameEl = document.getElementById('customerNameInput');
+      const custPhoneEl = document.getElementById('customerPhoneInput');
+      const payMethodSel = document.getElementById('paymentMethodSelect');
+      const payMethodCustom = document.getElementById('paymentMethodCustomInput');
+
+      if (!dateEl || !dateEl.value.trim()) {
+        missing.push({ label: 'ရက်စွဲ', el: dateEl });
+      }
+      if (!staffEl || !staffEl.value.trim()) {
+        missing.push({ label: 'တာဝန်ခံအမည်', el: staffEl });
+      }
+      if (!custNameEl || !custNameEl.value.trim()) {
+        missing.push({ label: 'အပ်နှံသူအမည်', el: custNameEl });
+      }
+      if (!custPhoneEl || !custPhoneEl.value.trim()) {
+        missing.push({ label: 'ဖုန်းနံပါတ်', el: custPhoneEl });
+      }
+
+      if (state.isReplacementMode) {
+        const repInp = document.getElementById('replaceVoucherNoInput');
+        const repSel = document.getElementById('replaceVoucherSelect');
+        const repReason = document.getElementById('replaceReasonInput');
+        const repNo = (repInp ? repInp.value.trim() : '') || (repSel ? repSel.value : '');
+        if (!repNo) {
+          missing.push({ label: 'မှားသွားသော ဘောင်ချာနံပါတ်', el: repInp || repSel });
+        }
+        if (!repReason || !repReason.value.trim()) {
+          missing.push({ label: 'မှားယွင်းရသည့် အကြောင်းရင်း', el: repReason });
+        }
+      }
+
+      let hasServiceError = false;
+      let firstServiceEl = null;
+      (state.items || []).forEach((item) => {
+        if (item.selectedService === 'အခြား (စာရိုက်ထည့်ရန်)' && !String(item.customServiceText || '').trim()) {
+          hasServiceError = true;
+        }
+        if ((Number(item.qty) || 0) < 1 || (Number(item.price) || 0) <= 0) {
+          hasServiceError = true;
+          if (!firstServiceEl) {
+            firstServiceEl = document.getElementById(`itemPriceInput_${item.id}`);
+          }
+        }
+      });
+      if (hasServiceError || calculateTotalAmount() <= 0) {
+        missing.push({ label: 'ဝန်ဆောင်မှုအကြောင်းအရာနှင့် နှုန်းထား (ကျပ်)', el: firstServiceEl });
+      }
+
+      if (payMethodSel && payMethodSel.value === 'အခြား' && (!payMethodCustom || !payMethodCustom.value.trim())) {
+        missing.push({ label: 'အခြား ငွေပေးချေမှုပုံစံ', el: payMethodCustom });
+      }
+
+      return missing;
+    }
+
+    function clearFieldHighlights() {
+      const ids = [
+        'staffNameSelect', 'voucherDateInput', 'customerNameInput', 'customerPhoneInput',
+        'replaceVoucherNoInput', 'replaceReasonInput', 'paymentMethodCustomInput'
+      ];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('ring-2', 'ring-rose-500', 'border-rose-500');
+      });
+    }
+
+    function updatePrintButtonState() {
+      const btn = document.getElementById('btnPrintAndAutoSave');
+      const icon = document.getElementById('btnPrintIcon');
+      const text = document.getElementById('btnPrintAndAutoSaveText');
+      const banner = document.getElementById('formValidationBanner');
+      const bannerText = document.getElementById('formValidationText');
+      if (!btn || !text) return;
+
+      const missing = getMissingRequiredFields();
+      if (missing.length === 0) {
+        btn.setAttribute('aria-disabled', 'false');
+        btn.className = 'w-full py-4 px-5 rounded-xl bg-gradient-to-r from-amber-700 via-amber-800 to-yellow-800 hover:from-amber-800 hover:to-yellow-900 text-white font-bold text-base shadow-lg transition flex items-center justify-center gap-2.5 cursor-pointer';
+        if (icon) icon.textContent = '🖨️';
+        text.textContent = 'A5 ဘောင်ချာ ပရင့်ထုတ်မည် (Print & Auto-Save)';
+        if (banner && bannerText) {
+          banner.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2';
+          bannerText.textContent = '✓ အချက်အလက်များ ပြည့်စုံပါပြီ — ပရင့်ထုတ်ပြီး Google Sheet သို့ တန်းသိမ်းနိုင်ပါပြီ။';
+        }
+        document.body.classList.remove('print-blocked');
+      } else {
+        btn.setAttribute('aria-disabled', 'true');
+        btn.className = 'w-full py-4 px-5 rounded-xl bg-slate-300 text-slate-600 cursor-not-allowed font-bold text-base shadow-sm transition flex items-center justify-center gap-2.5';
+        if (icon) icon.textContent = '🔒';
+        text.textContent = `အချက်အလက်ပြည့်စုံမှ ပရင့်ထုတ်နိုင်ပါမည် (ကျန် ${missing.length} ချက်)`;
+        if (banner && bannerText) {
+          banner.className = 'bg-rose-50 border border-rose-200 text-rose-800 px-3.5 py-2.5 rounded-xl text-xs font-semibold flex items-start gap-2';
+          bannerText.textContent = `🔒 ဖြည့်စွက်ရန် ကျန်ရှိနေသေးသည်များ — ${missing.map((m) => m.label).join('၊ ')}`;
+        }
+        if (state.activeScreen === 'ENTRY') {
+          document.body.classList.add('print-blocked');
+        }
+      }
     }
 
     function toggleVoucherBackground() {
@@ -2502,14 +2628,24 @@
     async function saveAndPrintVoucher() {
       if (state.isSavingAndPrinting) return;
 
-      if (state.isReplacementMode) {
-        const targetNo = document.getElementById('replaceVoucherNoInput').value.trim() || document.getElementById('replaceVoucherSelect').value;
-        if (!targetNo) {
-          showToast('မှားယွင်းဘောင်ချာ အစားထိုးပြန်ရိုက်ခြင်းအတွက် မှားသွားသော ဘောင်ချာနံပါတ်ကို ရွေးချယ် သို့မဟုတ် ရိုက်ထည့်ပေးပါ။', true);
-          document.getElementById('replaceVoucherNoInput').focus();
-          return;
+      clearFieldHighlights();
+      const missing = getMissingRequiredFields();
+      if (missing.length > 0) {
+        const names = missing.map((m) => m.label).join('၊ ');
+        showToast(`အချက်အလက် မပြည့်စုံသေးပါ — ${names} တို့ကို အရင်ဖြည့်စွက်ပေးပါ။`, true);
+        missing.forEach((m) => {
+          if (m.el) {
+            m.el.classList.add('ring-2', 'ring-rose-500', 'border-rose-500');
+          }
+        });
+        const firstEl = missing.find((m) => m.el)?.el;
+        if (firstEl) {
+          firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => firstEl.focus(), 200);
         }
+        return;
       }
+      document.body.classList.remove('print-blocked');
 
       state.isSavingAndPrinting = true;
       syncCalculationsAndPreview();
@@ -2595,7 +2731,15 @@
       syncCalculationsAndPreview();
     }
 
-    // Intercept Ctrl+P / Cmd+P on Entry Screen so staff cannot bypass Auto-Save by pressing keyboard shortcut
+    window.addEventListener('beforeprint', () => {
+      if (state.activeScreen === 'ENTRY' && getMissingRequiredFields().length > 0) {
+        document.body.classList.add('print-blocked');
+      } else {
+        document.body.classList.remove('print-blocked');
+      }
+    });
+
+    // Intercept Ctrl+P / Cmd+P on Entry Screen so staff cannot bypass validation & Auto-Save
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'p') {
         if (state.activeScreen === 'ENTRY') {
